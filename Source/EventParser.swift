@@ -1,5 +1,9 @@
 import Foundation
 
+public enum EventError: Error {
+    case notEventStreamError(data: String)
+}
+
 class EventParser {
     private struct Constants {
         static let dataLabel: Substring = "data"
@@ -23,6 +27,11 @@ class EventParser {
     }
 
     func parse(line: String) {
+        if line.isValidJSON() {
+            let error = EventError.notEventStreamError(data: line)
+            handler.onError(error: error)
+            return
+        }
         let splitByColon = line.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false)
 
         switch (splitByColon[0], splitByColon[safe: 1]) {
@@ -94,5 +103,19 @@ private extension Array {
     /// Returns the element at the specified index if it is within bounds, otherwise nil.
     subscript (safe index: Index) -> Element? {
         index >= startIndex && index < endIndex ? self[index] : nil
+    }
+}
+
+private extension String {
+    func isValidJSON() -> Bool {
+        if let data = self.data(using: .utf8) {
+            do {
+                _ = try JSONSerialization.jsonObject(with: data, options: [])
+                return true
+            } catch {
+                return false
+            }
+        }
+        return false
     }
 }

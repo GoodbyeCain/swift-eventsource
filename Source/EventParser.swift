@@ -106,7 +106,7 @@ private extension Array {
     }
 }
 
-private extension String {
+extension String {
     func isValidJSON() -> Bool {
         if let data = self.data(using: .utf8) {
             do {

@@ -315,6 +315,11 @@ class EventSourceDelegate: NSObject, URLSessionDataDelegate {
     }
 
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-        utf8LineParser.append(data).forEach(eventParser.parse)
+        if let content = String(data: data, encoding: .utf8), content.isValidJSON() {
+            let error = EventError.notEventStreamError(data: content)
+            config.handler.onError(error: error)
+        } else {
+            utf8LineParser.append(data).forEach(eventParser.parse)
+        }
     }
 }
